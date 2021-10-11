@@ -6,6 +6,7 @@ import pygame
 from highway_env.envs.common.action import ActionType, DiscreteMetaAction, ContinuousAction
 from highway_env.road.graphics import WorldSurface, RoadGraphics
 from highway_env.vehicle.graphics import VehicleGraphics
+from highway_env.pedestrian.graphics import PedestrianGraphics
 
 if TYPE_CHECKING:
     from highway_env.envs import AbstractEnv

@@ -7,6 +7,8 @@ from highway_env.utils import Vector
 from highway_env.vehicle.controller import ControlledVehicle
 from highway_env import utils
 from highway_env.vehicle.kinematics import Vehicle
+from highway_env.pedestrian.behavior import GeneralPedestrian
+
 
 
 class IDMVehicle(ControlledVehicle):
@@ -98,9 +100,16 @@ class IDMVehicle(ControlledVehicle):
 
         # Longitudinal: IDM
         front_vehicle, rear_vehicle = self.road.neighbour_vehicles(self, self.lane_index)
+        # action['acceleration'] = self.acceleration(ego_vehicle=self,
+        #                                            front_vehicle=front_vehicle,
+        #                                            rear_vehicle=rear_vehicle)
+        front_ped, rear_ped = self.road.neighbour_pedestrians(self, self.lane_index)
         action['acceleration'] = self.acceleration(ego_vehicle=self,
                                                    front_vehicle=front_vehicle,
-                                                   rear_vehicle=rear_vehicle)
+                                                   rear_vehicle=rear_vehicle,
+                                                   front_pedestrian=front_ped,
+                                                   rear_pedestrian=rear_ped)
+
         # When changing lane, check both current and target lanes
         if self.lane_index != self.target_lane_index:
             front_vehicle, rear_vehicle = self.road.neighbour_vehicles(self, self.target_lane_index)
@@ -126,7 +135,9 @@ class IDMVehicle(ControlledVehicle):
     def acceleration(self,
                      ego_vehicle: ControlledVehicle,
                      front_vehicle: Vehicle = None,
-                     rear_vehicle: Vehicle = None) -> float:
+                     rear_vehicle: Vehicle = None,
+                     front_pedestrian: GeneralPedestrian = None,
+                     rear_pedestrian: GeneralPedestrian = None) -> float:
         """
         Compute an acceleration command with the Intelligent Driver Model.
 
@@ -151,6 +162,12 @@ class IDMVehicle(ControlledVehicle):
             d = ego_vehicle.lane_distance_to(front_vehicle)
             acceleration -= self.COMFORT_ACC_MAX * \
                 np.power(self.desired_gap(ego_vehicle, front_vehicle) / utils.not_zero(d), 2)
+
+        if front_pedestrian:
+            d = ego_vehicle.lane_distance_to(front_pedestrian)
+            acceleration -= self.ACC_MAX * \
+                            np.power(self.desired_gap(ego_vehicle, front_pedestrian) / utils.not_zero(d), 2)
+
         return acceleration
 
     def desired_gap(self, ego_vehicle: Vehicle, front_vehicle: Vehicle = None, projected: bool = True) -> float:

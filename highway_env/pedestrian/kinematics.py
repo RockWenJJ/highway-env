@@ -1,6 +1,7 @@
 from typing import Union, Optional, Tuple, List
 import numpy as np
 import copy
+import math
 from collections import deque
 
 from highway_env import utils
@@ -9,35 +10,37 @@ from highway_env.vehicle.objects import RoadObject, Obstacle, Landmark
 from highway_env.utils import Vector
 
 
-class Vehicle(RoadObject):
+class Pedestrian(RoadObject):
 
     """
-    A moving vehicle on a road, and its kinematics.
+    A pedestrian on a road, and its kinematics.
 
-    The vehicle is represented by a dynamical system: a modified bicycle model.
-    It's state is propagated depending on its steering and acceleration actions.
     """
 
-    LENGTH = 5.0
-    """ Vehicle length [m] """
-    WIDTH = 2.0
-    """ Vehicle width [m] """
-    DEFAULT_SPEEDS = [23, 25]
+    LENGTH = 1
+    """ Pedestrian length [m] """
+    WIDTH = 1
+    RADIUS = 1
+    """ Pedestrian width [m] """
+    DEFAULT_SPEEDS = [1.0, 2.0]
     """ Range for random initial speeds [m/s] """
-    MAX_SPEED = 40.
+    MAX_SPEED = 3.
     """ Maximum reachable speed [m/s] """
     HISTORY_SIZE = 30
-    """ Length of the vehicle state history, for trajectory display"""
+    """ Length of the pedestrian state history, for trajectory display"""
 
     def __init__(self,
                  road: Road,
                  position: Vector,
+                 target: Vector,
                  heading: float = 0,
                  speed: float = 0,
                  predition_type: str = 'constant_steering'):
         super().__init__(road, position, heading, speed)
+        self.target = target
+        self.heading = math.atan2(self.target[1]-self.position[1], self.target[0]-self.position[0])
         self.prediction_type = predition_type
-        self.action = {'steering': 0, 'acceleration': 0}
+        self.action = {'steering': 0.0, 'acceleration': 0.0}
         self.crashed = False
         self.impact = None
         self.log = []
@@ -50,14 +53,14 @@ class Vehicle(RoadObject):
                       lane_to: Optional[str] = None,
                       lane_id: Optional[int] = None,
                       spacing: float = 1) \
-            -> "Vehicle":
+            -> "Pedestrian":
         """
-        Create a random vehicle on the road.
+        Create a random pedestrian on the intersection.
 
         The lane and /or speed are chosen randomly, while longitudinal position is chosen behind the last
         vehicle in the road with density based on the number of lanes.
 
-        :param road: the road where the vehicle is driving
+        :param road: the road where the pedestrian is crossing
         :param speed: initial speed in [m/s]. If None, will be chosen randomly
         :param lane_from: start node of the lane to spawn in
         :param lane_to: end node of the lane to spawn in
@@ -73,7 +76,7 @@ class Vehicle(RoadObject):
             if lane.speed_limit is not None:
                 speed = road.np_random.uniform(0.7*lane.speed_limit, 0.8*lane.speed_limit)
             else:
-                speed = road.np_random.uniform(Vehicle.DEFAULT_SPEEDS[0], Vehicle.DEFAULT_SPEEDS[1])
+                speed = road.np_random.uniform(Pedestrian.DEFAULT_SPEEDS[0], Pedestrian.DEFAULT_SPEEDS[1])
         default_spacing = 12+1.0*speed
         offset = spacing * default_spacing * np.exp(-5 / 40 * len(road.network.graph[_from][_to]))
         x0 = np.max([lane.local_coordinates(v.position)[0] for v in road.vehicles]) \
@@ -106,7 +109,7 @@ class Vehicle(RoadObject):
 
     def step(self, dt: float) -> None:
         """
-        Propagate the vehicle state given its actions.
+        Propagate the pedestrian state given its actions.
 
         Integrate a modified bicycle model with a 1st-order response on the steering wheel dynamics.
         If the vehicle is crashed, the actions are overridden with erratic steering and braking until complete stop.
@@ -213,4 +216,3 @@ class Vehicle(RoadObject):
 
     def __repr__(self):
         return self.__str__()
-

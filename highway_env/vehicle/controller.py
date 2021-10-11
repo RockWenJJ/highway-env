@@ -202,6 +202,7 @@ class ControlledVehicle(Vehicle):
 
 class MDPVehicle(ControlledVehicle):
 
+
     """A controlled vehicle with a specified discrete range of allowed target speeds."""
 
     SPEED_COUNT: int = 3  # []
@@ -239,6 +240,7 @@ class MDPVehicle(ControlledVehicle):
         self.speed_index = int(np.clip(self.speed_index, 0, self.SPEED_COUNT - 1))
         self.target_speed = self.index_to_speed(self.speed_index)
         super().act()
+
 
     def index_to_speed(self, index: int) -> float:
         """

@@ -7,6 +7,7 @@ from highway_env.vehicle.objects import Landmark
 
 if TYPE_CHECKING:
     from highway_env.vehicle import kinematics, objects
+    from highway_env.pedestrian.behavior import GeneralPedestrian
 
 logger = logging.getLogger(__name__)
 
@@ -264,7 +265,8 @@ class Road(object):
                  vehicles: List['kinematics.Vehicle'] = None,
                  road_objects: List['objects.RoadObject'] = None,
                  np_random: np.random.RandomState = None,
-                 record_history: bool = False) -> None:
+                 record_history: bool = False,
+                 pedestrians: List['Pedestrian'] = None) -> None:
         """
         New road.
 
@@ -276,6 +278,7 @@ class Road(object):
         """
         self.network = network
         self.vehicles = vehicles or []
+        self.pedestrians = pedestrians or []
         self.objects = road_objects or []
         self.np_random = np_random if np_random else np.random.RandomState()
         self.record_history = record_history
@@ -297,6 +300,8 @@ class Road(object):
         """Decide the actions of each entity on the road."""
         for vehicle in self.vehicles:
             vehicle.act()
+        for pedestrian in self.pedestrians:
+            pedestrian.act()
 
     def step(self, dt: float) -> None:
         """
@@ -306,11 +311,23 @@ class Road(object):
         """
         for vehicle in self.vehicles:
             vehicle.step(dt)
+        for pedestrian in self.pedestrians:
+            pedestrian.step(dt)
         for i, vehicle in enumerate(self.vehicles):
             for other in self.vehicles[i+1:]:
                 vehicle.handle_collisions(other, dt)
             for other in self.objects:
                 vehicle.handle_collisions(other, dt)
+            for other in self.pedestrians:
+                vehicle.handle_collisions(other, dt)
+
+        for i, pedestrian in enumerate(self.pedestrians):
+            # for other in self.pedestrians[i + 1:]:
+            #     pedestrian.handle_collisions(other, dt)
+            for other in self.vehicles:
+                pedestrian.handle_collisions(other, dt)
+            for other in self.objects:
+                pedestrian.handle_collisions(other, dt)
 
     def neighbour_vehicles(self, vehicle: 'kinematics.Vehicle', lane_index: LaneIndex = None) \
             -> Tuple[Optional['kinematics.Vehicle'], Optional['kinematics.Vehicle']]:
@@ -343,6 +360,66 @@ class Road(object):
                     s_rear = s_v
                     v_rear = v
         return v_front, v_rear
+
+    def neighbour_pedestrians(self, vehicle: 'kinematics.Vehicle', lane_index: LaneIndex = None) \
+            -> Tuple[Optional['kinematics.Vehicle'], Optional['kinematics.Vehicle']]:
+        """
+        Find the preceding and following vehicles of a given vehicle.
+
+        :param vehicle: the vehicle whose neighbours must be found
+        :param lane_index: the lane on which to look for preceding and following vehicles.
+                     It doesn't have to be the current vehicle lane but can also be another lane, in which case the
+                     vehicle is projected on it considering its local coordinates in the lane.
+        :return: its preceding vehicle, its following vehicle
+        """
+        lane_index = lane_index or vehicle.lane_index
+        if not lane_index:
+            return None, None
+        lane = self.network.get_lane(lane_index)
+        s = self.network.get_lane(lane_index).local_coordinates(vehicle.position)[0]
+        s_front = s_rear = None
+        v_front = v_rear = None
+        for v in self.pedestrians:  # self.network.is_connected_road(v.lane_index,
+            # lane_index, same_lane=True):
+            s_v, lat_v = lane.local_coordinates(v.position)
+            if not lane.on_lane(v.position, s_v, lat_v, margin=1):
+                continue
+            if s <= s_v and (s_front is None or s_v <= s_front):
+                s_front = s_v
+                v_front = v
+            if s_v < s and (s_rear is None or s_v > s_rear):
+                s_rear = s_v
+                v_rear = v
+        return v_front, v_rear
+
+    # def pedestrian_neighbour_pedestrians(self, pedestrian: 'GeneralPedestrian') \
+    #         -> Tuple[Optional['kinematics.Vehicle'], Optional['kinematics.Vehicle']]:
+    #     """
+    #     Find the preceding and following vehicles of a given vehicle.
+    #
+    #     :param vehicle: the vehicle whose neighbours must be found
+    #     :param lane_index: the lane on which to look for preceding and following vehicles.
+    #                  It doesn't have to be the current vehicle lane but can also be another lane, in which case the
+    #                  vehicle is projected on it considering its local coordinates in the lane.
+    #     :return: its preceding vehicle, its following vehicle
+    #     """
+    #     ped = pedestrian
+    #     vehicles = self.vehicles
+    #     f_v, r_v = None, None
+    #
+    #     for vehicle in vehicles:
+    #         # ignore controller vehicles
+    #         if isinstance(vehicle, MDPVehicle):
+    #             continue
+    #         pos = vehicle.position
+    #         d = np.linalg.norm(pos - ped.position)
+    #         if d < 40:
+    #             angle = math.atan2(pos[1] - ped.position[1], pos[0] - ped.position[0])
+    #             if abs(angle + ped.heading) < math.pi / 6 or abs(angle - ped.heading) < math.pi / 6:
+    #                 f_v = vehicle
+    #                 return f_v
+    #
+    #     return v_front, v_rear
 
     def __repr__(self):
         return self.vehicles.__repr__()

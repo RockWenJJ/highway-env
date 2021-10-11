@@ -166,7 +166,6 @@ class StraightLane(AbstractLane):
         lateral = np.dot(delta, self.direction_lateral)
         return float(longitudinal), float(lateral)
 
-
 class SineLane(StraightLane):
 
     """A sinusoidal lane."""
