@@ -28,6 +28,7 @@ class IntersectionHybridEnv(AbstractEnv):
             "observation": {
                 "type": "Kinematics",
                 "vehicles_count": 15,
+                "pedestrians_count": 10,
                 "features": ["presence", "x", "y", "vx", "vy", "cos_h", "sin_h"],
                 "features_range": {
                     "x": [-100, 100],
@@ -54,7 +55,7 @@ class IntersectionHybridEnv(AbstractEnv):
             "screen_height": 600,
             "centering_position": [0.5, 0.6],
             "scaling": 5.5 * 1.3,
-            "collision_ped_reward": -10,
+            "collision_ped_reward": -100,
             "collision_reward": -5,
             "high_speed_reward": 1,
             "arrived_reward": 1,
@@ -72,6 +73,8 @@ class IntersectionHybridEnv(AbstractEnv):
         scaled_speed = utils.lmap(self.vehicle.speed, self.config["reward_speed_range"], [0, 1])
         reward = self.config["collision_reward"] * vehicle.crashed \
                  + self.config["high_speed_reward"] * np.clip(scaled_speed, 0, 1)
+
+        reward += self.config['collision_ped_reward'] * vehicle.heavy_crashed
 
         reward = self.config["arrived_reward"] if self.has_arrived(vehicle) else reward
         if self.config["normalize_reward"]:

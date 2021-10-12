@@ -296,6 +296,19 @@ class Road(object):
             vehicles = vehicles[:count]
         return vehicles
 
+    def close_pedestrians_to(self, vehicle: 'kinematics.Vehicle', distance: float, count: Optional[int] = None,
+                          see_behind: bool = True, sort: bool = True) -> object:
+        pedestrians = [p for p in self.pedestrians
+                    if np.linalg.norm(p.position - vehicle.position) < distance
+                    and p is not vehicle
+                    and (see_behind or -2 * vehicle.LENGTH < vehicle.lane_distance_to(p))]
+
+        if sort:
+            pedestrians = sorted(pedestrians, key=lambda v: abs(vehicle.lane_distance_to(v)))
+        if count:
+            pedestrians = pedestrians[:count]
+        return pedestrians
+
     def act(self) -> None:
         """Decide the actions of each entity on the road."""
         for vehicle in self.vehicles:

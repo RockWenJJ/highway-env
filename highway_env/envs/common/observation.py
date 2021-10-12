@@ -142,6 +142,7 @@ class KinematicObservation(ObservationType):
     def __init__(self, env: 'AbstractEnv',
                  features: List[str] = None,
                  vehicles_count: int = 5,
+                 pedestrians_count: int = 5,
                  features_range: Dict[str, List[float]] = None,
                  absolute: bool = False,
                  order: str = "sorted",
@@ -164,6 +165,7 @@ class KinematicObservation(ObservationType):
         super().__init__(env)
         self.features = features or self.FEATURES
         self.vehicles_count = vehicles_count
+        self.pedestrians_count = pedestrians_count
         self.features_range = features_range
         self.absolute = absolute
         self.order = order
@@ -215,13 +217,35 @@ class KinematicObservation(ObservationType):
                 [v.to_dict(origin, observe_intentions=self.observe_intentions)
                  for v in close_vehicles[-self.vehicles_count + 1:]])[self.features],
                            ignore_index=True)
-        # Normalize and clip
-        if self.normalize:
-            df = self.normalize_obs(df)
+
+        # # Normalize and clip
+        # if self.normalize:
+        #     df = self.normalize_obs(df)
         # Fill missing rows
         if df.shape[0] < self.vehicles_count:
             rows = np.zeros((self.vehicles_count - df.shape[0], len(self.features)))
             df = df.append(pd.DataFrame(data=rows, columns=self.features), ignore_index=True)
+
+        # Add nearby pedestrian
+        close_pedestrians = self.env.road.close_pedestrians_to(self.observer_vehicle,
+                                                               self.env.PERCEPTION_DISTANCE,
+                                                               count=self.vehicles_count - 1,
+                                                               see_behind=self.see_behind,
+                                                               sort=self.order == "sorted")
+        if close_pedestrians:
+            origin = self.observer_vehicle if not self.absolute else None
+            df = df.append(pd.DataFrame.from_records(
+                [p.to_dict(origin, observe_intentions=self.observe_intentions)
+                 for p in close_pedestrians[-self.pedestrians_count + 1:]])[self.features],
+                           ignore_index=True)
+        # Normalize and clip
+        if self.normalize:
+            df = self.normalize_obs(df)
+        # Fill missing rows
+        if df.shape[0] < self.vehicles_count + self.pedestrians_count:
+            rows = np.zeros((self.vehicles_count + self.pedestrians_count - df.shape[0], len(self.features)))
+            df = df.append(pd.DataFrame(data=rows, columns=self.features), ignore_index=True)
+
         # Reorder
         df = df[self.features]
         obs = df.values.copy()

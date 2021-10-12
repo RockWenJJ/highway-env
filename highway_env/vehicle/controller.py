@@ -220,6 +220,7 @@ class MDPVehicle(ControlledVehicle):
         super().__init__(road, position, heading, speed, target_lane_index, target_speed, route)
         self.speed_index = self.speed_to_index(self.target_speed)
         self.target_speed = self.index_to_speed(self.speed_index)
+        self.heavy_crashed = False
 
     def act(self, action: Union[dict, str] = None) -> None:
         """
@@ -302,3 +303,32 @@ class MDPVehicle(ControlledVehicle):
                 if (t % int(trajectory_timestep / dt)) == 0:
                     states.append(copy.deepcopy(v))
         return states
+
+    def handle_collisions(self, other: 'RoadObject', dt: float = 0) -> None:
+        """
+        Check for collision with another vehicle.
+
+        :param other: the other vehicle or object
+        :param dt: timestep to check for future collisions (at constant velocity)
+        """
+
+        if other is self or not (self.check_collisions or other.check_collisions):
+            return
+        if not (self.collidable and other.collidable):
+            return
+        intersecting, will_intersect, transition = self._is_colliding(other, dt)
+        if will_intersect:
+            if self.solid and other.solid:
+                self.impact = transition / 2
+                other.impact = -transition / 2
+        if intersecting:
+            if self.solid and other.solid:
+                self.crashed = True
+                other.crashed = True
+            if not self.solid:
+                self.hit = True
+            if not other.solid:
+                other.hit = True
+            if not isinstance(other, Vehicle):
+                self.heavy_crashed = True
+

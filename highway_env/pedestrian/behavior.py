@@ -54,7 +54,6 @@ class GeneralPedestrian(Pedestrian):
                  speed: float = 0,
                  target_lane_index: int = None,
                  target_speed: float = None,
-                 route: Route = None,
                  enable_lane_change: bool = True,
                  timer: float = None):
         super().__init__(road, position, target, heading, speed, target)

@@ -74,6 +74,7 @@ class RoadObject(ABC):
         :param other: the other vehicle or object
         :param dt: timestep to check for future collisions (at constant velocity)
         """
+
         if other is self or not (self.check_collisions or other.check_collisions):
             return
         if not (self.collidable and other.collidable):
