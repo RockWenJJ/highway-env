@@ -17,10 +17,10 @@ class Pedestrian(RoadObject):
 
     """
 
-    LENGTH = 1
+    LENGTH = 0.6
     """ Pedestrian length [m] """
-    WIDTH = 1
-    RADIUS = 1
+    WIDTH = 0.6
+    RADIUS = 0.6
     """ Pedestrian width [m] """
     DEFAULT_SPEEDS = [1.0, 2.0]
     """ Range for random initial speeds [m/s] """
