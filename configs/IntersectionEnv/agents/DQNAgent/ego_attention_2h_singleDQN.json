@@ -1,0 +1,9 @@
+{
+    "base_config": "configs/IntersectionEnv/agents/DQNAgent/ego_attention.json",
+    "model": {
+        "attention_layer": {
+            "heads": 2
+        }
+    },
+    "double": 0
+}

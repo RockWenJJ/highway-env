@@ -35,6 +35,7 @@ class RoadObject(ABC):
         self.speed = speed
         self.lane_index = self.road.network.get_closest_lane_index(self.position, self.heading) if self.road else np.nan
         self.lane = self.road.network.get_lane(self.lane_index) if self.road else None
+        self.index = 0
 
         # Enable collision with other collidables
         self.collidable = True
@@ -110,7 +111,8 @@ class RoadObject(ABC):
             'cos_h': np.cos(self.heading),
             'sin_h': np.sin(self.heading),
             'cos_d': 0.,
-            'sin_d': 0.
+            'sin_d': 0.,
+            'index': self.index
         }
         if not observe_intentions:
             d["cos_d"] = d["sin_d"] = 0

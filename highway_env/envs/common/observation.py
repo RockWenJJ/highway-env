@@ -69,7 +69,7 @@ class GrayscaleObservation(ObservationType):
                  **kwargs) -> None:
         super().__init__(env)
         self.observation_shape = observation_shape
-        self.shape = (stack_size, ) + self.observation_shape
+        self.shape = [stack_size] + self.observation_shape
         self.weights = weights
         self.obs = np.zeros(self.shape)
 
