@@ -56,6 +56,7 @@ class AbstractEnv(gym.Env):
         self.observation_type = None
         self.observation_space = None
         self.define_spaces()
+        self.object_index = 0
 
         # Running
         self.time = 0  # Simulation time

@@ -94,6 +94,7 @@ class IntersectionEnv(AbstractEnv):
         return info
 
     def _reset(self) -> None:
+        self.object_index = 0
         self._make_road()
         self._make_vehicles(self.config["initial_vehicle_count"])
 
@@ -192,6 +193,8 @@ class IntersectionEnv(AbstractEnv):
                              ego_lane.position(60 + 5*self.np_random.randn(1), 0),
                              speed=ego_lane.speed_limit,
                              heading=ego_lane.heading_at(60))
+            self.object_index += 1
+            ego_vehicle.index = self.object_index
             try:
                 ego_vehicle.plan_route_to(destination)
                 ego_vehicle.SPEED_MIN = 0
@@ -217,12 +220,14 @@ class IntersectionEnv(AbstractEnv):
         if self.np_random.rand() > spawn_probability:
             return
 
+        self.object_index += 1
         route = self.np_random.choice(range(4), size=2, replace=False)
         route[1] = (route[0] + 2) % 4 if go_straight else route[1]
         vehicle_type = utils.class_from_path(self.config["other_vehicles_type"])
         vehicle = vehicle_type.make_on_lane(self.road, ("o" + str(route[0]), "ir" + str(route[0]), 0),
                                             longitudinal=longitudinal + 5 + self.np_random.randn() * position_deviation,
                                             speed=8 + self.np_random.randn() * speed_deviation)
+        vehicle.index = self.object_index
         for v in self.road.vehicles:
             if np.linalg.norm(v.position - vehicle.position) < 15:
                 return

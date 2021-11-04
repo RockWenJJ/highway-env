@@ -22,12 +22,14 @@ if __name__ == '__main__':
     done = False
     for ep in range(50):
         ep_reward = 0
-        env.reset()
+        obs = env.reset()
+        indexes = []
         while True:
             action = np.random.randint(0, 3)
             # action = np.random.random(2)
-            obs, reward, done, info = env.step(action)
+            next_obs, reward, done, info = env.step(action)
             # env.render()
+            obs = next_obs
             ep_reward += reward
             time.sleep(0.01)
             if done:
