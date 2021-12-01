@@ -18,7 +18,7 @@ def load_environments(config):
 
 
 if __name__ == '__main__':
-    env = load_environments("configs/IntersectionEnv/env_no_normalize.json")
+    env = load_environments("configs/IntersectionEnv/env_new.json")
     done = False
     for ep in range(50):
         ep_reward = 0
@@ -37,6 +37,7 @@ if __name__ == '__main__':
             ep_reward += reward
             time.sleep(0.01)
             if done:
+                print(info["agent_arrived"])
                 print("Episodic Reward: %.2f"%ep_reward)
                 break
 

@@ -179,6 +179,7 @@ class VehicleGraphics(object):
         elif isinstance(vehicle, MDPVehicle):
             color = cls.EGO_COLOR
         if transparent:
+            color = cls.YELLOW
             color = (color[0], color[1], color[2], 30)
         return color
 

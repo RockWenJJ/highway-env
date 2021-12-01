@@ -271,6 +271,34 @@ class IDMVehicle(ControlledVehicle):
                 return -self.COMFORT_ACC_MAX / 2
         return acceleration
 
+    def handle_collisions(self, other: 'RoadObject', dt: float = 0) -> None:
+        """
+        Check for collision with another vehicle.
+
+        :param other: the other vehicle or object
+        :param dt: timestep to check for future collisions (at constant velocity)
+        """
+        if other is self or not (self.check_collisions or other.check_collisions):
+            return
+        if not (self.collidable and other.collidable):
+            return
+        if isinstance(other, IDMVehicle):      # if other is not the controlled vehicle, don't handle collision
+            return
+
+        intersecting, will_intersect, transition = self._is_colliding(other, dt)
+        if will_intersect:
+            if self.solid and other.solid:
+                self.impact = transition / 2
+                other.impact = -transition / 2
+        if intersecting:
+            if self.solid and other.solid:
+                self.crashed = True
+                other.crashed = True
+            if not self.solid:
+                self.hit = True
+            if not other.solid:
+                other.hit = True
+
 
 class LinearVehicle(IDMVehicle):
 
