@@ -199,6 +199,8 @@ class Vehicle(RoadObject):
             'sin_h': self.direction[1],
             'cos_d': self.destination_direction[0],
             'sin_d': self.destination_direction[1],
+            "dest_x": self.destination[0],
+            "dest_y": self.destination[1],
             'index': self.index
         }
         if not observe_intentions:

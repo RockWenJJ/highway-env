@@ -1,4 +1,4 @@
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 
 from gym.envs.registration import register
 import numpy as np
@@ -22,13 +22,20 @@ class IntersectionNewEnv(AbstractEnv):
     }
     ACTIONS_INDEXES = {v: k for k, v in ACTIONS.items()}
 
+    def seed(self, seed: int = None) -> List[int]:
+        '''Get deterministic random state to better analyze the algorithm'''
+        self.seed_num = self.reset_count
+        self.np_random = np.random.RandomState()
+        self.np_random.seed(self.seed_num)
+        return [self.seed_num]
+
     @classmethod
     def default_config(cls) -> dict:
         config = super().default_config()
         config.update({
             "observation": {
                 "type": "Kinematics",
-                "vehicles_count": 15,
+                "vehicles_count": 10,
                 "features": ["presence", "x", "y", "vx", "vy", "cos_h", "sin_h"],
                 "features_range": {
                     "x": [-100, 100],
@@ -108,9 +115,11 @@ class IntersectionNewEnv(AbstractEnv):
         return info
 
     def _reset(self) -> None:
+        self.reset_count += 1
         self.object_index = 0
         self._make_road()
         self._make_vehicles(self.config["initial_vehicle_count"])
+        self.seed()
 
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
         obs, reward, done, info = super().step(action)

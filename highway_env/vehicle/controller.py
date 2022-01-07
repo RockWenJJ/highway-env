@@ -301,6 +301,30 @@ class MDPVehicle(ControlledVehicle):
                     states.append(copy.deepcopy(v))
         return states
 
+    def to_dict(self, origin_vehicle: "Vehicle" = None, observe_intentions: bool = True) -> dict:
+        d = {
+            'presence': 1,
+            'x': self.position[0],
+            'y': self.position[1],
+            'vx': self.velocity[0],
+            'vy': self.velocity[1],
+            'heading': self.heading,
+            'cos_h': self.direction[0],
+            'sin_h': self.direction[1],
+            # 'cos_d': self.destination_direction[0],
+            # 'sin_d': self.destination_direction[1],
+            "dest_x": self.destination[0],
+            "dest_y": self.destination[1],
+            'index': self.index
+        }
+        if not observe_intentions:
+            d["dest_x"] = d["dest_y"] = 0
+        if origin_vehicle:
+            origin_dict = origin_vehicle.to_dict()
+            for key in ['x', 'y', 'vx', 'vy']:
+                d[key] -= origin_dict[key]
+        return d
+
 class MDPNoColVehicle(ControlledVehicle):
 
     """A controlled vehicle with a specified discrete range of allowed target speeds."""
@@ -436,3 +460,27 @@ class MDPNoColVehicle(ControlledVehicle):
         #         self.hit = True
         #     if not other.solid:
         #         other.hit = True
+
+    def to_dict(self, origin_vehicle: "Vehicle" = None, observe_intentions: bool = True) -> dict:
+        d = {
+            'presence': 1,
+            'x': self.position[0],
+            'y': self.position[1],
+            'vx': self.velocity[0],
+            'vy': self.velocity[1],
+            'heading': self.heading,
+            'cos_h': self.direction[0],
+            'sin_h': self.direction[1],
+            # 'cos_d': self.destination_direction[0],
+            # 'sin_d': self.destination_direction[1],
+            "dest_x": self.destination[0],
+            "dest_y": self.destination[1],
+            'index': self.index
+        }
+        if not observe_intentions:
+            d["dest_x"] = d["dest_y"] = 0
+        if origin_vehicle:
+            origin_dict = origin_vehicle.to_dict()
+            for key in ['x', 'y', 'vx', 'vy']:
+                d[key] -= origin_dict[key]
+        return d

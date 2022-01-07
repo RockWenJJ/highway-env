@@ -43,6 +43,7 @@ class AbstractEnv(gym.Env):
         self.configure(config)
 
         # Seeding
+        self.reset_count = 0
         self.np_random = None
         self.seed()
 
