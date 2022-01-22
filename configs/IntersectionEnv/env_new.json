@@ -1,5 +1,5 @@
 {
-    "id": "intersection-v4",
+    "id": "intersection-v1",
     "import_module": "highway_env",
     "observation": {
         "type": "Kinematics",
@@ -16,17 +16,17 @@
         "absolute": true,
         "order": "shuffled"
     },
-    "seed": 0,
     "reward_speed_range": [3.0, 9.0],
     "destination": "o1",
     "policy_frequency": 15,
     "simulation_frequency": 15,
-    "max_vehicle_count": 2,
+    "max_vehicle_count": 4,
     "spawn_probability": 0.5,
     "duration": 30,
     "no_speed_reward": false,
     "step_reward": -0.1,
     "collision_reward": -10,
     "high_speed_reward": 1,
-    "arrived_reward": 5
+    "arrived_reward": 5,
+    "initial_seed": 0
 }

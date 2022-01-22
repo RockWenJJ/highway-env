@@ -61,7 +61,7 @@ class EnvViewer(object):
                     self.screen = pygame.display.set_mode((self.config["screen_width"],
                                                            2 * self.config["screen_height"]))
                 else:
-                    self.screen = pygame.display.set_mode((2 * self.config["screen_width"],
+                    self.screen = pygame.display.set_mode((self.config["screen_width"],
                                                            self.config["screen_height"]))
             self.agent_surface = pygame.Surface((self.config["screen_width"], self.config["screen_height"]))
         self.agent_display = agent_display

@@ -43,7 +43,7 @@ class AbstractEnv(gym.Env):
         self.configure(config)
 
         # Seeding
-        self.reset_count = 0
+        self.reset_count = self.config["initial_seed"] if "initial_seed" in self.config else 0
         self.np_random = None
         self.seed()
 
@@ -118,6 +118,7 @@ class AbstractEnv(gym.Env):
     def configure(self, config: dict) -> None:
         if config:
             self.config.update(config)
+            self.reset_count = self.config["initial_seed"] if "initial_seed" in self.config else 0
 
     def update_metadata(self, video_real_time_ratio=2):
         frames_freq = self.config["simulation_frequency"] \
