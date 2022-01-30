@@ -90,6 +90,8 @@ class IntersectionNewEnv(AbstractEnv):
         else:
             reward = self.config["collision_reward"] * vehicle.crashed * crash_ratio \
                      + self.config["high_speed_reward"] * np.clip(scaled_speed, 0, 1)
+            # speed_reward = self.config["high_speed_reward"] * scaled_speed if scaled_speed >=0 and scaled_speed <= 1 else 0
+            # reward = self.config["collision_reward"] * vehicle.crashed * crash_ratio + speed_reward
 
         reward = self.config["arrived_reward"] if self.has_arrived(vehicle) else reward
         if self.config["normalize_reward"]:
@@ -215,7 +217,7 @@ class IntersectionNewEnv(AbstractEnv):
             ego_vehicle = self.action_type.vehicle_class(
                              self.road,
                              ego_lane.position(5*self.np_random.randn(1), 0),
-                             speed=ego_lane.speed_limit,
+                             speed=4, #ego_lane.speed_limit,
                              heading=ego_lane.heading_at(0))
             self.object_index += 1
             ego_vehicle.index = self.object_index
@@ -252,7 +254,7 @@ class IntersectionNewEnv(AbstractEnv):
         vehicle_type = utils.class_from_path(self.config["other_vehicles_type"])
         vehicle = vehicle_type.make_on_lane(self.road, ("o" + str(route[0]), "ir" + str(route[0]), 0),
                                             longitudinal=longitudinal + 5 + self.np_random.randn() * position_deviation,
-                                            speed=8 + self.np_random.randn() * speed_deviation)
+                                            speed=5 + self.np_random.randn() * speed_deviation)
         vehicle.index = self.object_index
         for v in self.road.vehicles:
             if np.linalg.norm(v.position - vehicle.position) < 15:

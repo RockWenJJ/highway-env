@@ -38,7 +38,7 @@ if __name__ == '__main__':
             action = env.np_random.randint(0, 3)
             next_obs, reward, done, info = env.step(action)
             v_nums.append(len(env.road.vehicles))
-            # env.render()
+            env.render()
             obs = next_obs
             obs_x.append(obs[0][1])
             obs_y.append(obs[0][2])

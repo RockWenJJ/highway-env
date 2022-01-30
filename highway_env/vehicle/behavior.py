@@ -298,6 +298,14 @@ class IDMVehicle(ControlledVehicle):
                 self.hit = True
             if not other.solid:
                 other.hit = True
+
+    # def _is_colliding(self, other, dt):
+    #     # Fast spherical pre-check
+    #     if np.linalg.norm(other.position - self.position) > self.LENGTH:
+    #         return False, False, np.zeros(2, )
+    #     else:
+    #         # _, _, transition = utils.are_polygons_intersecting(self.polygon(), other.polygon(), self.velocity * dt, other.velocity * dt)
+    #         return True, True, 5.0
                 
     def to_dict(self, origin_vehicle: "Vehicle" = None, observe_intentions: bool = True) -> dict:
         d = {
@@ -643,6 +651,14 @@ class IDMBaseLineVehicle(ControlledVehicle):
                 self.hit = True
             if not other.solid:
                 other.hit = True
+
+    # def _is_colliding(self, other, dt):
+    #     # Fast spherical pre-check
+    #     if np.linalg.norm(other.position - self.position) > self.LENGTH:
+    #         return False, False, np.zeros(2, )
+    #     else:
+    #         # _, _, transition = utils.are_polygons_intersecting(self.polygon(), other.polygon(), self.velocity * dt, other.velocity * dt)
+    #         return True, True, 5.0
 
 
 class LinearVehicle(IDMVehicle):
