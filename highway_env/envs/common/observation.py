@@ -227,6 +227,15 @@ class KinematicObservation(ObservationType):
         obs = df.values.copy()
         if self.order == "shuffled":
             self.env.np_random.shuffle(obs[1:])
+        else:
+            others_feature, others_index = obs[1:, :], obs[1:, -1]
+            others_num = obs[1:].shape[0]
+            others_feature_new = np.zeros_like(others_feature)
+            for i, index in enumerate(others_index):
+                new_index = int(index)%others_num
+                others_feature_new[new_index, :] = others_feature[i, :]
+            obs_new = np.vstack([obs[0,...], others_feature_new])
+            obs = obs_new
         # Flatten
         return obs.astype(self.space().dtype)
 

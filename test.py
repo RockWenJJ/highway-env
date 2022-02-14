@@ -19,6 +19,7 @@ def load_environments(config):
 
 
 if __name__ == '__main__':
+    # env = load_environments("configs/IntersectionEnv/env_new.json")
     env = load_environments("configs/IntersectionEnv/env_new.json")
     done = False
 
@@ -35,7 +36,9 @@ if __name__ == '__main__':
         v_nums = []
         step = 0
         while True:
-            action = env.np_random.randint(0, 3)
+            # action = env.np_random.randint(0, 3)
+            # action = np.zeros(2)
+            action = (env.np_random.random()-0.5) * 20.0
             next_obs, reward, done, info = env.step(action)
             v_nums.append(len(env.road.vehicles))
             env.render()

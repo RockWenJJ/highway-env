@@ -219,8 +219,11 @@ class DiscreteMetaAction(ActionType):
     def vehicle_class(self) -> Callable:
         return MDPVehicle
 
-    def act(self, action: int) -> None:
-        self.controlled_vehicle.act(self.actions[action])
+    def act(self, action) -> None:
+        if isinstance(action, int) and action in [0, 1, 2]:
+            self.controlled_vehicle.act(self.actions[action])
+        elif isinstance(action, float):
+            self.controlled_vehicle.act(action)
 
 
 class MultiAgentAction(ActionType):

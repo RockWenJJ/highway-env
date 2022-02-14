@@ -331,6 +331,64 @@ class IDMVehicle(ControlledVehicle):
                 d[key] -= origin_dict[key]
         return d
 
+class IDMConstSpeedVehicle(IDMVehicle):
+    def handle_collisions(self, other: 'RoadObject', dt: float = 0) -> None:
+        """
+        Check for collision with another vehicle.
+
+        :param other: the other vehicle or object
+        :param dt: timestep to check for future collisions (at constant velocity)
+        """
+        if other is self or not (self.check_collisions or other.check_collisions):
+            return
+        if not (self.collidable and other.collidable):
+            return
+        if isinstance(other, IDMVehicle):      # if other is not the controlled vehicle, don't handle collision
+            return
+
+        intersecting, will_intersect, transition = self._is_colliding(other, dt)
+        return
+        # if will_intersect:
+        #     if self.solid and other.solid:
+        #         self.impact = transition / 2
+        #         other.impact = -transition / 2
+        # if intersecting:
+        #     if self.solid and other.solid:
+        #         self.crashed = True
+        #         other.crashed = True
+        #     if not self.solid:
+        #         self.hit = True
+        #     if not other.solid:
+        #         other.hit = True
+
+    def act(self, action: Union[dict, str] = None):
+        """
+        Execute an action.
+
+        For now, no action is supported because the vehicle takes all decisions
+        of acceleration and lane changes on its own, based on the IDM and MOBIL models.
+
+        :param action: the action
+        """
+        if self.crashed:
+            return
+        action = {}
+        # Lateral: MOBIL
+        self.follow_road()
+        if self.enable_lane_change:
+            self.change_lane_policy()
+        action['steering'] = self.steering_control(self.target_lane_index)
+        action['steering'] = np.clip(action['steering'], -self.MAX_STEERING_ANGLE, self.MAX_STEERING_ANGLE)
+
+        # Longitudinal: IDM
+        front_vehicle, rear_vehicle = self.road.neighbour_vehicles(self, self.lane_index)
+        action['acceleration'] = self.acceleration(ego_vehicle=self,
+                                                   front_vehicle=front_vehicle,
+                                                   rear_vehicle=rear_vehicle)
+        action['acceleration'] = 0
+        Vehicle.act(self, action)  # Skip ControlledVehicle.act(), or the command will be overriden.
+
+
 class IDMNoColVehicle(IDMVehicle):
     def handle_collisions(self, other: 'RoadObject', dt: float = 0) -> None:
         """
@@ -360,6 +418,26 @@ class IDMNoColVehicle(IDMVehicle):
         #         self.hit = True
         #     if not other.solid:
         #         other.hit = True
+
+    def act(self, action: Union[dict, str] = None) -> None:
+        """
+        Perform a high-level action.
+
+        - If the action is a speed change, choose speed from the allowed discrete range.
+        - Else, forward action to the ControlledVehicle handler.
+
+        :param action: a high-level action
+        """
+        if action == "FASTER":
+            self.speed_index = self.speed_to_index(self.speed) + 1
+        elif action == "SLOWER":
+            self.speed_index = self.speed_to_index(self.speed) - 1
+        else:
+            super().act(action)
+            return
+        self.speed_index = int(np.clip(self.speed_index, 0, self.SPEED_COUNT - 1))
+        self.target_speed = self.index_to_speed(self.speed_index)
+        super().act()
 
 class IDMBaseLineVehicle(ControlledVehicle):
     """
