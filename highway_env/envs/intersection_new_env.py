@@ -711,6 +711,42 @@ class IntersectionConstSpeedBaselineEnv(IntersectionNewEnv):
         self.road.vehicles.append(vehicle)
         return vehicle
 
+class IntersectionPunishOffroad(IntersectionNewEnv):
+
+    def _agent_reward(self, action: int, vehicle: Vehicle) -> float:
+
+        local_coords = vehicle.lane.local_coordinates(vehicle.position)
+        # if abs(local_coords[1]) >= 2.0:
+        #     vehicle.crashed = True
+        scaled_speed = utils.lmap(self.vehicle.speed, self.config["reward_speed_range"], [0, 1])
+        # if vehicle.CURRENT_CRASH:
+        # crash_ratio = 1 if vehicle.CURRENT_DIST < vehicle.WIDTH+1 else -0.5 * vehicle.CURRENT_DIST + 2.5
+        crash_ratio = 1
+
+        # reward = self.config["collision_reward"] * vehicle.CURRENT_CRASH * crash_ratio\
+        #          + self.config["high_speed_reward"] * np.clip(scaled_speed, 0, 1)
+        if self.config["no_speed_reward"]:
+            reward = self.config["collision_reward"] * vehicle.crashed * crash_ratio + self.config["step_reward"]
+        else:
+            # reward = self.config["collision_reward"] * vehicle.crashed * crash_ratio \
+            #          + self.config["high_speed_reward"] * np.clip(scaled_speed, 0, 1)
+            # speed_reward = self.config["high_speed_reward"] * np.clip(scaled_speed, 0, 1)
+            speed_reward = self.config["high_speed_reward"] * scaled_speed if scaled_speed >=0 and scaled_speed <= 1 else 0
+            if vehicle.speed < self.config["low_speed_thresh"]:
+                speed_reward = self.config["low_speed_punish"]
+            elif vehicle.speed > self.config["high_speed_thresh"]:
+                speed_reward = self.config["high_speed_punish"]
+            reward = self.config["collision_reward"] * vehicle.crashed * crash_ratio + speed_reward
+
+        reward = self.config["arrived_reward"] if self.has_arrived(vehicle) else reward
+
+        # compute lateral distance
+        offroad_reward = self.config["offroad_punish"] * abs(local_coords[1]) / 1.0
+        reward = reward + offroad_reward
+        if self.config["normalize_reward"]:
+            reward = utils.lmap(reward, [self.config["collision_reward"], self.config["arrived_reward"]], [0, 1])
+        return reward
+
 register(
     id='intersection-v1',
     entry_point='highway_env.envs:IntersectionNewEnv',
@@ -740,5 +776,11 @@ register(
 id='intersection-v6',
     entry_point='highway_env.envs:IntersectionDisPunish',
 )
+
+register(
+id='intersection-v7',
+    entry_point='highway_env.envs:IntersectionPunishOffroad',
+)
+
 
 

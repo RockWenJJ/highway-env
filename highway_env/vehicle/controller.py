@@ -90,7 +90,9 @@ class ControlledVehicle(Vehicle):
             action = {"steering": self.steering_control(self.target_lane_index),
                       "acceleration": acceleration}
             action['steering'] = np.clip(action['steering'], -self.MAX_STEERING_ANGLE, self.MAX_STEERING_ANGLE)
-        elif isinstance(action, str):
+        elif action is None:
+            action = self.action
+        else:
             if action == "FASTER":
                 self.target_speed += self.DELTA_SPEED
             elif action == "SLOWER":

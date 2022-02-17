@@ -1,5 +1,5 @@
 {
-    "id": "intersection-v1",
+    "id": "intersection-v7",
     "import_module": "highway_env",
     "observation": {
         "type": "Kinematics",
